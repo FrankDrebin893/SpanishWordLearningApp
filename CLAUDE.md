@@ -20,15 +20,15 @@ cd spanish_data && git pull
 ## Architecture
 
 - **Blazor Server** with interactive server-side rendering
-- **No database** - progress stored in browser localStorage via JS interop
+- **LiteDB** for progress persistence (stored in `%APPDATA%\SpanishWordLearner\progress.db`)
 - **Data loading** - WordService loads from spanish_data files at startup, falls back to embedded data
 
 ## Important Files
 
 - `Services/WordService.cs` - Main service providing word data
 - `Services/DataLoader.cs` - Parses frequency.csv and es-en.data files
-- `Services/ProgressService.cs` - Handles localStorage persistence
-- `spanish_data/` - Cloned repository with frequency and translation data
+- `Services/ProgressService.cs` - Handles LiteDB persistence
+- `spanish_data/` - Git submodule with frequency and translation data
 
 ## Documentation Requirements
 
@@ -48,6 +48,16 @@ cd spanish_data && git pull
 - **Limitations**: Be honest about what the app cannot do
 - **Requirements**: Keep .NET version and dependencies current
 - **Project Structure**: Reflect actual file organization
+
+## Git Workflow
+
+**Always commit and push after making changes.** After completing any task that modifies code:
+
+1. Stage the changed files
+2. Write a clear commit message describing what changed
+3. Push to origin
+
+This ensures changes are never lost and the remote stays up to date.
 
 ## Code Style
 

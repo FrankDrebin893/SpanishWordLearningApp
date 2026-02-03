@@ -9,7 +9,7 @@ builder.Services.AddRazorComponents()
 
 // Register application services
 builder.Services.AddSingleton<WordService>();
-builder.Services.AddScoped<ProgressService>();
+builder.Services.AddSingleton<ProgressService>(); // Singleton to manage LiteDB connection
 
 var app = builder.Build();
 

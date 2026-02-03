@@ -30,8 +30,9 @@ A Blazor web application for learning the most common Spanish words through flas
 - Reset progress option
 
 ### Progress Persistence
-- All progress is saved to browser localStorage
-- Progress persists across sessions
+- Progress stored locally using LiteDB (lightweight embedded database)
+- Database location: `%APPDATA%\SpanishWordLearner\progress.db` (Windows)
+- Progress persists across sessions and browser changes
 - No account or login required
 
 ## Data Source
@@ -49,11 +50,10 @@ If the data files are not present, the app falls back to an embedded list of 200
 
 - **No audio pronunciation**: Words are text-only, no audio playback
 - **No spaced repetition**: Words are presented in frequency order, not using SRS algorithms
-- **Single user**: Progress is stored in browser localStorage (not synced across devices)
+- **Single user**: Progress is stored locally (not synced across devices)
 - **Limited context**: Example sentences are only available for the fallback word set
 - **English only**: Translations are Spanish to English only
 - **Offline data**: Word list is static and loaded at startup (not updated dynamically)
-- **Browser-dependent**: Progress is lost if browser data is cleared
 
 ## Requirements
 
@@ -96,7 +96,7 @@ SpanishWordLearningApp/
 │   └── UserProgress.cs         # Progress tracking models
 ├── Services/
 │   ├── DataLoader.cs           # Parses spanish_data files
-│   ├── ProgressService.cs      # Manages user progress (localStorage)
+│   ├── ProgressService.cs      # Manages user progress (LiteDB)
 │   └── WordService.cs          # Provides word data to components
 ├── spanish_data/               # Git submodule from doozan/spanish_data
 │   ├── frequency.csv           # Word frequency rankings
