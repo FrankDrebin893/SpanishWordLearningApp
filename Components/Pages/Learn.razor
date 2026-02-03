@@ -117,7 +117,7 @@ else
 
     protected override void OnInitialized()
     {
-        _words = WordService.GetWordsByFrequency(200);
+        _words = WordService.GetWordsByFrequency(10000);
         if (_words.Count > 0)
         {
             _currentWord = _words[0];

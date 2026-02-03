@@ -150,8 +150,8 @@ public class DataLoader
                 FrequencyRank = rank
             });
 
-            // Limit to first 1000 words for performance
-            if (id >= 1000)
+            // Limit to first 10000 words
+            if (id >= 10000)
                 break;
         }
 
