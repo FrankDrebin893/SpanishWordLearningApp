@@ -1,0 +1,302 @@
+@page "/quiz"
+@using SpanishWordLearner.Models
+@using SpanishWordLearner.Services
+@inject WordService WordService
+@inject ProgressService ProgressService
+@rendermode InteractiveServer
+
+<PageTitle>Spanish Quiz</PageTitle>
+
+<h1>Spanish Quiz</h1>
+
+@if (!_quizStarted)
+{
+    <div class="card" style="max-width: 400px;">
+        <div class="card-body">
+            <h5 class="card-title">Start a Quiz</h5>
+            <div class="mb-3">
+                <label class="form-label">Number of questions:</label>
+                <select class="form-select" @bind="_questionCount">
+                    <option value="5">5 questions</option>
+                    <option value="10">10 questions</option>
+                    <option value="20">20 questions</option>
+                    <option value="50">50 questions</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quiz type:</label>
+                <select class="form-select" @bind="_quizType">
+                    <option value="SpanishToEnglish">Spanish to English</option>
+                    <option value="EnglishToSpanish">English to Spanish</option>
+                    <option value="Mixed">Mixed</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" @onclick="StartQuiz">Start Quiz</button>
+        </div>
+    </div>
+}
+else if (_quizComplete)
+{
+    <div class="card" style="max-width: 500px;">
+        <div class="card-body text-center">
+            <h3 class="card-title">Quiz Complete!</h3>
+            <div class="display-4 my-4">
+                @_correctAnswers / @_questions.Count
+            </div>
+            <p class="lead">
+                @if (_accuracy >= 90)
+                {
+                    <span class="text-success">Excellent work!</span>
+                }
+                else if (_accuracy >= 70)
+                {
+                    <span class="text-primary">Good job!</span>
+                }
+                else if (_accuracy >= 50)
+                {
+                    <span class="text-warning">Keep practicing!</span>
+                }
+                else
+                {
+                    <span class="text-danger">Don't give up!</span>
+                }
+            </p>
+            <p>Accuracy: @_accuracy.ToString("F0")%</p>
+            <button class="btn btn-primary me-2" @onclick="StartQuiz">Try Again</button>
+            <button class="btn btn-outline-secondary" @onclick="ResetQuiz">New Quiz Settings</button>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Review Answers</h5>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Your Answer</th>
+                    <th>Correct Answer</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var result in _results)
+                {
+                    <tr class="@(result.IsCorrect ? "table-success" : "table-danger")">
+                        <td>@result.Question</td>
+                        <td>@result.UserAnswer</td>
+                        <td>@result.CorrectAnswer</td>
+                        <td>@(result.IsCorrect ? "Correct" : "Wrong")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="card" style="max-width: 500px;">
+        <div class="card-header">
+            Question @(_currentQuestionIndex + 1) of @_questions.Count
+        </div>
+        <div class="card-body">
+            <h4 class="card-title mb-4">
+                @if (_currentQuestion!.IsSpanishToEnglish)
+                {
+                    <span>What does "<strong>@_currentQuestion.Word.Spanish</strong>" mean?</span>
+                }
+                else
+                {
+                    <span>How do you say "<strong>@_currentQuestion.Word.English</strong>" in Spanish?</span>
+                }
+            </h4>
+
+            <div class="d-grid gap-2">
+                @foreach (var option in _currentQuestion.Options)
+                {
+                    var optionText = _currentQuestion.IsSpanishToEnglish ? option.English : option.Spanish;
+                    <button class="btn @GetOptionClass(option)"
+                            @onclick="() => SelectAnswer(option)"
+                            disabled="@_answerSelected">
+                        @optionText
+                    </button>
+                }
+            </div>
+
+            @if (_answerSelected)
+            {
+                <div class="mt-4">
+                    @if (_lastAnswerCorrect)
+                    {
+                        <div class="alert alert-success">Correct!</div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            Wrong! The correct answer is:
+                            <strong>
+                                @(_currentQuestion.IsSpanishToEnglish
+                                    ? _currentQuestion.Word.English
+                                    : _currentQuestion.Word.Spanish)
+                            </strong>
+                        </div>
+                    }
+                    <button class="btn btn-primary" @onclick="NextQuestion">
+                        @(_currentQuestionIndex < _questions.Count - 1 ? "Next Question" : "See Results")
+                    </button>
+                </div>
+            }
+        </div>
+        <div class="card-footer">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar"
+                     style="width: @((_currentQuestionIndex + 1) * 100 / _questions.Count)%">
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _quizStarted;
+    private bool _quizComplete;
+    private int _questionCount = 10;
+    private string _quizType = "SpanishToEnglish";
+
+    private List<QuizQuestion> _questions = new();
+    private QuizQuestion? _currentQuestion;
+    private int _currentQuestionIndex;
+    private bool _answerSelected;
+    private SpanishWord? _selectedAnswer;
+    private bool _lastAnswerCorrect;
+    private int _correctAnswers;
+    private double _accuracy;
+    private List<QuizResult> _results = new();
+
+    private class QuizQuestion
+    {
+        public required SpanishWord Word { get; set; }
+        public required List<SpanishWord> Options { get; set; }
+        public bool IsSpanishToEnglish { get; set; }
+    }
+
+    private class QuizResult
+    {
+        public required string Question { get; set; }
+        public required string UserAnswer { get; set; }
+        public required string CorrectAnswer { get; set; }
+        public bool IsCorrect { get; set; }
+    }
+
+    private void StartQuiz()
+    {
+        _quizStarted = true;
+        _quizComplete = false;
+        _currentQuestionIndex = 0;
+        _correctAnswers = 0;
+        _results.Clear();
+        _answerSelected = false;
+
+        var allWords = WordService.GetAllWords();
+        var selectedWords = allWords.OrderBy(_ => Random.Shared.Next()).Take(_questionCount).ToList();
+
+        _questions = selectedWords.Select(word =>
+        {
+            var isSpanishToEnglish = _quizType switch
+            {
+                "SpanishToEnglish" => true,
+                "EnglishToSpanish" => false,
+                _ => Random.Shared.Next(2) == 0
+            };
+
+            var wrongOptions = allWords
+                .Where(w => w.Id != word.Id)
+                .OrderBy(_ => Random.Shared.Next())
+                .Take(3)
+                .ToList();
+
+            var options = wrongOptions.Append(word).OrderBy(_ => Random.Shared.Next()).ToList();
+
+            return new QuizQuestion
+            {
+                Word = word,
+                Options = options,
+                IsSpanishToEnglish = isSpanishToEnglish
+            };
+        }).ToList();
+
+        _currentQuestion = _questions[0];
+    }
+
+    private void ResetQuiz()
+    {
+        _quizStarted = false;
+        _quizComplete = false;
+    }
+
+    private async Task SelectAnswer(SpanishWord selected)
+    {
+        if (_answerSelected) return;
+
+        _answerSelected = true;
+        _selectedAnswer = selected;
+        _lastAnswerCorrect = selected.Id == _currentQuestion!.Word.Id;
+
+        if (_lastAnswerCorrect)
+            _correctAnswers++;
+
+        await ProgressService.RecordAnswerAsync(_currentQuestion.Word.Id, _lastAnswerCorrect);
+
+        _results.Add(new QuizResult
+        {
+            Question = _currentQuestion.IsSpanishToEnglish
+                ? _currentQuestion.Word.Spanish
+                : _currentQuestion.Word.English,
+            UserAnswer = _currentQuestion.IsSpanishToEnglish
+                ? selected.English
+                : selected.Spanish,
+            CorrectAnswer = _currentQuestion.IsSpanishToEnglish
+                ? _currentQuestion.Word.English
+                : _currentQuestion.Word.Spanish,
+            IsCorrect = _lastAnswerCorrect
+        });
+    }
+
+    private async Task NextQuestion()
+    {
+        if (_currentQuestionIndex < _questions.Count - 1)
+        {
+            _currentQuestionIndex++;
+            _currentQuestion = _questions[_currentQuestionIndex];
+            _answerSelected = false;
+            _selectedAnswer = null;
+        }
+        else
+        {
+            _quizComplete = true;
+            _accuracy = _questions.Count > 0 ? (double)_correctAnswers / _questions.Count * 100 : 0;
+
+            var session = new QuizSession
+            {
+                Date = DateTime.UtcNow,
+                TotalQuestions = _questions.Count,
+                CorrectAnswers = _correctAnswers,
+                WordIdsTested = _questions.Select(q => q.Word.Id).ToList()
+            };
+            await ProgressService.RecordQuizSessionAsync(session);
+        }
+    }
+
+    private string GetOptionClass(SpanishWord option)
+    {
+        if (!_answerSelected)
+            return "btn-outline-primary";
+
+        if (option.Id == _currentQuestion!.Word.Id)
+            return "btn-success";
+
+        if (option.Id == _selectedAnswer?.Id)
+            return "btn-danger";
+
+        return "btn-outline-secondary";
+    }
+}

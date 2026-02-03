@@ -1,0 +1,125 @@
+@page "/"
+@using SpanishWordLearner.Services
+@inject WordService WordService
+@inject ProgressService ProgressService
+@rendermode InteractiveServer
+
+<PageTitle>Spanish Word Learner</PageTitle>
+
+<div class="text-center mb-5">
+    <h1 class="display-4">Spanish Word Learner</h1>
+    <p class="lead">Master the @WordService.TotalWordCount most common Spanish words</p>
+    <small class="text-muted">Data source: @WordService.DataSource</small>
+</div>
+
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Your Progress</h5>
+                    <div class="row text-center">
+                        <div class="col">
+                            <h3 class="text-primary">@_wordsLearned</h3>
+                            <p class="text-muted">Words Learned</p>
+                        </div>
+                        <div class="col">
+                            <h3 class="text-info">@_wordsSeen</h3>
+                            <p class="text-muted">Words Seen</p>
+                        </div>
+                        <div class="col">
+                            <h3 class="text-success">@_quizzesTaken</h3>
+                            <p class="text-muted">Quizzes Taken</p>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: @(_wordsLearned * 100.0 / WordService.TotalWordCount)%"
+                             title="Learned">
+                        </div>
+                        <div class="progress-bar bg-info" role="progressbar"
+                             style="width: @((_wordsSeen - _wordsLearned) * 100.0 / WordService.TotalWordCount)%"
+                             title="Seen but not learned">
+                        </div>
+                    </div>
+                    <p class="text-muted mt-2 small">
+                        <span class="text-success">Green: Learned</span> |
+                        <span class="text-info">Blue: Seen</span> |
+                        Gray: Not yet seen
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Learn</h5>
+                    <p class="card-text">Study Spanish words with flashcards. See the word, then reveal the translation.</p>
+                    <a href="/learn" class="btn btn-primary">Start Learning</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Quiz</h5>
+                    <p class="card-text">Test your knowledge with multiple choice quizzes. Track your accuracy.</p>
+                    <a href="/quiz" class="btn btn-success">Take a Quiz</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Statistics</h5>
+                    <p class="card-text">View detailed statistics about your learning progress and performance.</p>
+                    <a href="/statistics" class="btn btn-info">View Stats</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">How It Works</h5>
+                    <ul class="mb-0">
+                        <li><strong>Learn mode:</strong> Go through flashcards to familiarize yourself with new words</li>
+                        <li><strong>Quiz mode:</strong> Test your knowledge with multiple choice questions</li>
+                        <li><strong>Track progress:</strong> A word is considered "learned" when you get it right 3+ times with 70%+ accuracy</li>
+                        <li><strong>Words are ordered by frequency:</strong> Learn the most common words first!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loaded;
+    private int _wordsLearned;
+    private int _wordsSeen;
+    private int _quizzesTaken;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var progress = await ProgressService.GetProgressAsync();
+            _wordsLearned = progress.TotalWordsLearned;
+            _wordsSeen = progress.WordStats.Count;
+            _quizzesTaken = progress.TotalQuizzesTaken;
+            _loaded = true;
+            StateHasChanged();
+        }
+    }
+}

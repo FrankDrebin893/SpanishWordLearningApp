@@ -1,0 +1,32 @@
+# .NET
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+publish/
+
+# NuGet
+*.nupkg
+packages/
+
+# Local settings
+appsettings.Development.json
+*.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

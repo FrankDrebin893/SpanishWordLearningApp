@@ -1,0 +1,275 @@
+@page "/statistics"
+@using SpanishWordLearner.Models
+@using SpanishWordLearner.Services
+@inject WordService WordService
+@inject ProgressService ProgressService
+@rendermode InteractiveServer
+
+<PageTitle>Statistics</PageTitle>
+
+<h1>Your Learning Statistics</h1>
+
+@if (_loading)
+{
+    <p>Loading statistics...</p>
+}
+else
+{
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-bg-primary">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@_progress.TotalWordsLearned</h3>
+                    <p class="card-text">Words Learned</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-info">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@_progress.WordStats.Count</h3>
+                    <p class="card-text">Words Seen</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-success">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@_progress.TotalQuizzesTaken</h3>
+                    <p class="card-text">Quizzes Taken</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-warning">
+                <div class="card-body text-center">
+                    <h3 class="card-title">@(_progress.OverallAccuracy.ToString("F0"))%</h3>
+                    <p class="card-text">Overall Accuracy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Learning Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label>Words Learned: @_progress.TotalWordsLearned / @WordService.TotalWordCount</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: @(_progress.TotalWordsLearned * 100.0 / WordService.TotalWordCount)%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Words Seen: @_progress.WordStats.Count / @WordService.TotalWordCount</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar"
+                                 style="width: @(_progress.WordStats.Count * 100.0 / WordService.TotalWordCount)%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Quiz History</h5>
+                </div>
+                <div class="card-body">
+                    @if (_progress.QuizHistory.Count == 0)
+                    {
+                        <p class="text-muted">No quizzes taken yet. <a href="/quiz">Take a quiz!</a></p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Accuracy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var quiz in _progress.QuizHistory.OrderByDescending(q => q.Date).Take(10))
+                                {
+                                    <tr>
+                                        <td>@quiz.Date.ToLocalTime().ToString("MMM dd, HH:mm")</td>
+                                        <td>@quiz.CorrectAnswers / @quiz.TotalQuestions</td>
+                                        <td>
+                                            <span class="badge @GetAccuracyBadgeClass(quiz.Accuracy)">
+                                                @((quiz.Accuracy * 100).ToString("F0"))%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Word Performance</h5>
+            <div>
+                <button class="btn btn-sm @(_showFilter == "all" ? "btn-primary" : "btn-outline-primary")"
+                        @onclick='() => SetFilter("all")'>All</button>
+                <button class="btn btn-sm @(_showFilter == "learned" ? "btn-success" : "btn-outline-success")"
+                        @onclick='() => SetFilter("learned")'>Learned</button>
+                <button class="btn btn-sm @(_showFilter == "struggling" ? "btn-danger" : "btn-outline-danger")"
+                        @onclick='() => SetFilter("struggling")'>Struggling</button>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (_filteredWords.Count == 0)
+            {
+                <p class="text-muted">No words to display. Start learning to see your progress!</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Spanish</th>
+                                <th>English</th>
+                                <th>Times Reviewed</th>
+                                <th>Accuracy</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in _filteredWords.Take(50))
+                            {
+                                <tr>
+                                    <td><strong>@item.Word.Spanish</strong></td>
+                                    <td>@item.Word.English</td>
+                                    <td>@item.Progress.TimesReviewed</td>
+                                    <td>
+                                        <div class="progress" style="min-width: 80px;">
+                                            <div class="progress-bar @GetAccuracyBarClass(item.Progress.Accuracy)"
+                                                 role="progressbar"
+                                                 style="width: @(item.Progress.Accuracy * 100)%">
+                                                @((item.Progress.Accuracy * 100).ToString("F0"))%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (item.Progress.IsLearned)
+                                        {
+                                            <span class="badge bg-success">Learned</span>
+                                        }
+                                        else if (item.Progress.Accuracy < 0.5 && item.Progress.TimesReviewed >= 3)
+                                        {
+                                            <span class="badge bg-danger">Struggling</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Learning</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button class="btn btn-outline-danger" @onclick="ShowResetConfirm">
+            Reset All Progress
+        </button>
+        @if (_showResetConfirm)
+        {
+            <div class="alert alert-danger mt-2">
+                <p>Are you sure you want to reset all your progress? This cannot be undone.</p>
+                <button class="btn btn-danger me-2" @onclick="ResetProgress">Yes, Reset Everything</button>
+                <button class="btn btn-secondary" @onclick="() => _showResetConfirm = false">Cancel</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private UserProgress _progress = new();
+    private bool _loading = true;
+    private string _showFilter = "all";
+    private List<(SpanishWord Word, WordProgress Progress)> _filteredWords = new();
+    private bool _showResetConfirm;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _progress = await ProgressService.GetProgressAsync();
+            UpdateFilteredWords();
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SetFilter(string filter)
+    {
+        _showFilter = filter;
+        UpdateFilteredWords();
+    }
+
+    private void UpdateFilteredWords()
+    {
+        var allWords = WordService.GetAllWords();
+        var wordProgressList = _progress.WordStats
+            .Select(kvp =>
+            {
+                var word = allWords.FirstOrDefault(w => w.Id == kvp.Key);
+                return word != null ? (Word: word, Progress: kvp.Value) : default;
+            })
+            .Where(x => x.Word != null)
+            .ToList()!;
+
+        _filteredWords = _showFilter switch
+        {
+            "learned" => wordProgressList.Where(x => x.Progress.IsLearned).ToList(),
+            "struggling" => wordProgressList.Where(x => !x.Progress.IsLearned && x.Progress.Accuracy < 0.5 && x.Progress.TimesReviewed >= 3).ToList(),
+            _ => wordProgressList
+        };
+
+        _filteredWords = _filteredWords.OrderByDescending(x => x.Progress.LastReviewed).ToList();
+    }
+
+    private void ShowResetConfirm() => _showResetConfirm = true;
+
+    private async Task ResetProgress()
+    {
+        await ProgressService.ResetProgressAsync();
+        _progress = new UserProgress();
+        _filteredWords.Clear();
+        _showResetConfirm = false;
+    }
+
+    private string GetAccuracyBadgeClass(double accuracy) => accuracy switch
+    {
+        >= 0.9 => "bg-success",
+        >= 0.7 => "bg-primary",
+        >= 0.5 => "bg-warning",
+        _ => "bg-danger"
+    };
+
+    private string GetAccuracyBarClass(double accuracy) => accuracy switch
+    {
+        >= 0.9 => "bg-success",
+        >= 0.7 => "bg-primary",
+        >= 0.5 => "bg-warning",
+        _ => "bg-danger"
+    };
+}
