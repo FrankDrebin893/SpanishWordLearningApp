@@ -1,3 +1,4 @@
+using MudBlazor.Services;
 using SpanishWordLearner.Components;
 using SpanishWordLearner.Services;
 
@@ -6,6 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Add MudBlazor
+builder.Services.AddMudServices();
 
 // Register application services
 builder.Services.AddSingleton<WordService>();

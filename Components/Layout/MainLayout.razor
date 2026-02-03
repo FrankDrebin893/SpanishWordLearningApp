@@ -1,23 +1,78 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<MudLayout>
+    <MudAppBar Elevation="0" Color="Color.Transparent" Class="border-b" Style="background: white;">
+        <MudText Typo="Typo.h6" Class="ml-3" Style="color: #5E60CE; font-weight: 600;">
+            Spanish Word Learner
+        </MudText>
+        <MudSpacer />
+    </MudAppBar>
 
-        <article class="content px-4">
+    <MudMainContent Class="pt-4" Style="padding-bottom: 80px;">
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+
+    <MudAppBar Bottom="true" Elevation="1" Color="Color.Surface" Fixed="true" Dense="true">
+        <MudSpacer />
+        <MudButtonGroup OverrideStyles="false">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/" StartIcon="@Icons.Material.Rounded.Home" Class="mx-1">
+                Home
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/learn" StartIcon="@Icons.Material.Rounded.School" Class="mx-1">
+                Learn
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/quiz" StartIcon="@Icons.Material.Rounded.Quiz" Class="mx-1">
+                Quiz
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/statistics" StartIcon="@Icons.Material.Rounded.Analytics" Class="mx-1">
+                Stats
+            </MudButton>
+        </MudButtonGroup>
+        <MudSpacer />
+    </MudAppBar>
+</MudLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <span class="dismiss">X</span>
 </div>
+
+@code {
+    private MudTheme _theme = new MudTheme
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#5E60CE",
+            Secondary = "#64DFDF",
+            Tertiary = "#80FFDB",
+            Success = "#10B981",
+            Error = "#EF4444",
+            Warning = "#F59E0B",
+            Info = "#3B82F6",
+            Background = "#F8FAFC",
+            Surface = "#FFFFFF",
+            AppbarBackground = "#FFFFFF",
+            TextPrimary = "#1E293B",
+            TextSecondary = "#64748B"
+        },
+        Typography = new Typography
+        {
+            Default = new DefaultTypography
+            {
+                FontFamily = new[] { "Inter", "Helvetica", "Arial", "sans-serif" }
+            }
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "12px"
+        }
+    };
+}

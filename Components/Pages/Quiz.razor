@@ -7,152 +7,154 @@
 
 <PageTitle>Spanish Quiz</PageTitle>
 
-<h1>Spanish Quiz</h1>
-
 @if (!_quizStarted)
 {
-    <div class="card" style="max-width: 400px;">
-        <div class="card-body">
-            <h5 class="card-title">Start a Quiz</h5>
-            <div class="mb-3">
-                <label class="form-label">Number of questions:</label>
-                <select class="form-select" @bind="_questionCount">
-                    <option value="5">5 questions</option>
-                    <option value="10">10 questions</option>
-                    <option value="20">20 questions</option>
-                    <option value="50">50 questions</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Quiz type:</label>
-                <select class="form-select" @bind="_quizType">
-                    <option value="SpanishToEnglish">Spanish to English</option>
-                    <option value="EnglishToSpanish">English to Spanish</option>
-                    <option value="Mixed">Mixed</option>
-                </select>
-            </div>
-            <button class="btn btn-primary" @onclick="StartQuiz">Start Quiz</button>
-        </div>
+    <div class="d-flex flex-column align-center">
+        <MudText Typo="Typo.h4" Class="mb-6" Style="font-weight: 600;">Start a Quiz</MudText>
+
+        <MudPaper Elevation="0" Class="pa-6 rounded-lg" Style="border: 1px solid #E2E8F0; width: 100%; max-width: 400px;">
+            <MudSelect T="int" Label="Number of questions" @bind-Value="_questionCount" Variant="Variant.Outlined" Class="mb-4">
+                <MudSelectItem Value="5">5 questions</MudSelectItem>
+                <MudSelectItem Value="10">10 questions</MudSelectItem>
+                <MudSelectItem Value="20">20 questions</MudSelectItem>
+                <MudSelectItem Value="50">50 questions</MudSelectItem>
+            </MudSelect>
+
+            <MudSelect T="string" Label="Quiz type" @bind-Value="_quizType" Variant="Variant.Outlined" Class="mb-6">
+                <MudSelectItem Value="@("SpanishToEnglish")">Spanish to English</MudSelectItem>
+                <MudSelectItem Value="@("EnglishToSpanish")">English to Spanish</MudSelectItem>
+                <MudSelectItem Value="@("Mixed")">Mixed</MudSelectItem>
+            </MudSelect>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
+                       OnClick="StartQuiz" StartIcon="@Icons.Material.Rounded.PlayArrow">
+                Start Quiz
+            </MudButton>
+        </MudPaper>
     </div>
 }
 else if (_quizComplete)
 {
-    <div class="card" style="max-width: 500px;">
-        <div class="card-body text-center">
-            <h3 class="card-title">Quiz Complete!</h3>
-            <div class="display-4 my-4">
-                @_correctAnswers / @_questions.Count
-            </div>
-            <p class="lead">
-                @if (_accuracy >= 90)
-                {
-                    <span class="text-success">Excellent work!</span>
-                }
-                else if (_accuracy >= 70)
-                {
-                    <span class="text-primary">Good job!</span>
-                }
-                else if (_accuracy >= 50)
-                {
-                    <span class="text-warning">Keep practicing!</span>
-                }
-                else
-                {
-                    <span class="text-danger">Don't give up!</span>
-                }
-            </p>
-            <p>Accuracy: @_accuracy.ToString("F0")%</p>
-            <button class="btn btn-primary me-2" @onclick="StartQuiz">Try Again</button>
-            <button class="btn btn-outline-secondary" @onclick="ResetQuiz">New Quiz Settings</button>
-        </div>
-    </div>
+    <div class="d-flex flex-column align-center">
+        <MudPaper Elevation="0" Class="pa-8 rounded-lg text-center mb-6"
+                  Style="border: 1px solid #E2E8F0; width: 100%; max-width: 500px;">
 
-    <div class="mt-4">
-        <h5>Review Answers</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Question</th>
-                    <th>Your Answer</th>
-                    <th>Correct Answer</th>
-                    <th>Result</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var result in _results)
-                {
-                    <tr class="@(result.IsCorrect ? "table-success" : "table-danger")">
-                        <td>@result.Question</td>
-                        <td>@result.UserAnswer</td>
-                        <td>@result.CorrectAnswer</td>
-                        <td>@(result.IsCorrect ? "Correct" : "Wrong")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            <MudIcon Icon="@(_accuracy >= 70 ? Icons.Material.Rounded.EmojiEvents : Icons.Material.Rounded.School)"
+                     Size="Size.Large" Color="@(_accuracy >= 70 ? Color.Warning : Color.Primary)" Class="mb-4" />
+
+            <MudText Typo="Typo.h4" Class="mb-2">Quiz Complete!</MudText>
+
+            <MudText Typo="Typo.h2" Color="@GetAccuracyColor()" Class="my-4" Style="font-weight: 700;">
+                @_correctAnswers / @_questions.Count
+            </MudText>
+
+            <MudText Typo="Typo.h6" Color="@GetAccuracyColor()" Class="mb-2">
+                @GetAccuracyMessage()
+            </MudText>
+
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">
+                Accuracy: @_accuracy.ToString("F0")%
+            </MudText>
+
+            <div class="d-flex gap-3 justify-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">
+                    Try Again
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="ResetQuiz">
+                    New Settings
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <MudExpansionPanels Elevation="0" Style="width: 100%; max-width: 600px; border: 1px solid #E2E8F0;" Class="rounded-lg">
+            <MudExpansionPanel Text="Review Answers" Style="font-weight: 500;">
+                <MudSimpleTable Dense="true" Hover="true" Striped="true">
+                    <thead>
+                        <tr>
+                            <th>Question</th>
+                            <th>Your Answer</th>
+                            <th>Correct</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var result in _results)
+                        {
+                            <tr>
+                                <td>@result.Question</td>
+                                <td>@result.UserAnswer</td>
+                                <td>@result.CorrectAnswer</td>
+                                <td>
+                                    <MudIcon Icon="@(result.IsCorrect ? Icons.Material.Rounded.Check : Icons.Material.Rounded.Close)"
+                                             Color="@(result.IsCorrect ? Color.Success : Color.Error)" Size="Size.Small" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
     </div>
 }
 else
 {
-    <div class="card" style="max-width: 500px;">
-        <div class="card-header">
+    <div class="d-flex flex-column align-center">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
             Question @(_currentQuestionIndex + 1) of @_questions.Count
-        </div>
-        <div class="card-body">
-            <h4 class="card-title mb-4">
+        </MudText>
+
+        <MudProgressLinear Color="Color.Primary" Rounded="true" Value="@((_currentQuestionIndex + 1) * 100.0 / _questions.Count)"
+                           Class="mb-6" Style="width: 100%; max-width: 500px;" />
+
+        <MudPaper Elevation="0" Class="pa-6 rounded-lg" Style="border: 1px solid #E2E8F0; width: 100%; max-width: 500px;">
+
+            <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-6">
                 @if (_currentQuestion!.IsSpanishToEnglish)
                 {
-                    <span>What does "<strong>@_currentQuestion.Word.Spanish</strong>" mean?</span>
+                    <span>What does "<strong style="color: #5E60CE;">@_currentQuestion.Word.Spanish</strong>" mean?</span>
                 }
                 else
                 {
-                    <span>How do you say "<strong>@_currentQuestion.Word.English</strong>" in Spanish?</span>
+                    <span>How do you say "<strong style="color: #5E60CE;">@_currentQuestion.Word.English</strong>" in Spanish?</span>
                 }
-            </h4>
+            </MudText>
 
-            <div class="d-grid gap-2">
+            <div class="d-flex flex-column gap-3">
                 @foreach (var option in _currentQuestion.Options)
                 {
                     var optionText = _currentQuestion.IsSpanishToEnglish ? option.English : option.Spanish;
-                    <button class="btn @GetOptionClass(option)"
-                            @onclick="() => SelectAnswer(option)"
-                            disabled="@_answerSelected">
+                    <MudButton Variant="@GetOptionVariant(option)"
+                               Color="@GetOptionColor(option)"
+                               FullWidth="true"
+                               Size="Size.Large"
+                               OnClick="@(() => SelectAnswer(option))"
+                               Disabled="@_answerSelected"
+                               Class="justify-start text-left">
                         @optionText
-                    </button>
+                    </MudButton>
                 }
             </div>
 
             @if (_answerSelected)
             {
-                <div class="mt-4">
+                <MudAlert Severity="@(_lastAnswerCorrect ? Severity.Success : Severity.Error)" Class="mt-4" Dense="true">
                     @if (_lastAnswerCorrect)
                     {
-                        <div class="alert alert-success">Correct!</div>
+                        <span>Correct!</span>
                     }
                     else
                     {
-                        <div class="alert alert-danger">
-                            Wrong! The correct answer is:
-                            <strong>
-                                @(_currentQuestion.IsSpanishToEnglish
-                                    ? _currentQuestion.Word.English
-                                    : _currentQuestion.Word.Spanish)
-                            </strong>
-                        </div>
+                        <span>The correct answer is: <strong>@(_currentQuestion.IsSpanishToEnglish ? _currentQuestion.Word.English : _currentQuestion.Word.Spanish)</strong></span>
                     }
-                    <button class="btn btn-primary" @onclick="NextQuestion">
-                        @(_currentQuestionIndex < _questions.Count - 1 ? "Next Question" : "See Results")
-                    </button>
-                </div>
+                </MudAlert>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mt-4"
+                           OnClick="NextQuestion"
+                           EndIcon="@Icons.Material.Rounded.ArrowForward">
+                    @(_currentQuestionIndex < _questions.Count - 1 ? "Next Question" : "See Results")
+                </MudButton>
             }
-        </div>
-        <div class="card-footer">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar"
-                     style="width: @((_currentQuestionIndex + 1) * 100 / _questions.Count)%">
-                </div>
-            </div>
-        </div>
+        </MudPaper>
     </div>
 }
 
@@ -286,17 +288,40 @@ else
         }
     }
 
-    private string GetOptionClass(SpanishWord option)
+    private Variant GetOptionVariant(SpanishWord option)
     {
         if (!_answerSelected)
-            return "btn-outline-primary";
+            return Variant.Outlined;
+        return Variant.Filled;
+    }
+
+    private Color GetOptionColor(SpanishWord option)
+    {
+        if (!_answerSelected)
+            return Color.Default;
 
         if (option.Id == _currentQuestion!.Word.Id)
-            return "btn-success";
+            return Color.Success;
 
         if (option.Id == _selectedAnswer?.Id)
-            return "btn-danger";
+            return Color.Error;
 
-        return "btn-outline-secondary";
+        return Color.Default;
     }
+
+    private Color GetAccuracyColor() => _accuracy switch
+    {
+        >= 90 => Color.Success,
+        >= 70 => Color.Primary,
+        >= 50 => Color.Warning,
+        _ => Color.Error
+    };
+
+    private string GetAccuracyMessage() => _accuracy switch
+    {
+        >= 90 => "Excellent work!",
+        >= 70 => "Good job!",
+        >= 50 => "Keep practicing!",
+        _ => "Don't give up!"
+    };
 }

@@ -1,6 +1,6 @@
 # Spanish Word Learner
 
-A Blazor web application for learning the most common Spanish words through flashcards and quizzes.
+A modern Blazor web application for learning the most common Spanish words through flashcards and quizzes. Built with MudBlazor for a clean, focused learning experience.
 
 ## Features
 

@@ -20,6 +20,7 @@ cd spanish_data && git pull
 ## Architecture
 
 - **Blazor Server** with interactive server-side rendering
+- **MudBlazor** for UI components (Material Design)
 - **LiteDB** for progress persistence (stored in `%APPDATA%\SpanishWordLearner\progress.db`)
 - **Data loading** - WordService loads from spanish_data files at startup, falls back to embedded data
 

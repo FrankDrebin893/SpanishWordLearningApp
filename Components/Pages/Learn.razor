@@ -7,73 +7,102 @@
 
 <PageTitle>Learn Spanish Words</PageTitle>
 
-<h1>Learn Spanish Words</h1>
-
 @if (_currentWord == null)
 {
-    <p>Loading...</p>
+    <div class="d-flex justify-center py-8">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </div>
 }
 else
 {
-    <div class="card mb-4" style="max-width: 500px;">
-        <div class="card-header d-flex justify-content-between">
-            <span>Word @(_currentIndex + 1) of @_words.Count</span>
-            <span class="badge bg-secondary">@_currentWord.PartOfSpeech</span>
-        </div>
-        <div class="card-body text-center">
+    <div class="d-flex flex-column align-center">
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+            Word @(_currentIndex + 1) of @_words.Count
+        </MudText>
+
+        <MudProgressLinear Color="Color.Primary" Rounded="true" Value="@((_currentIndex + 1) * 100.0 / _words.Count)"
+                           Class="mb-6" Style="width: 100%; max-width: 400px;" />
+
+        <MudPaper Elevation="0" Class="pa-8 rounded-xl d-flex flex-column align-center"
+                  Style="border: 1px solid #E2E8F0; width: 100%; max-width: 500px; min-height: 300px;">
+
+            <MudChip T="string" Size="Size.Small" Color="Color.Default" Class="mb-4">
+                @_currentWord.PartOfSpeech
+            </MudChip>
+
             @if (!_showTranslation)
             {
-                <h2 class="card-title display-4 mb-4">@_currentWord.Spanish</h2>
-                <button class="btn btn-primary btn-lg" @onclick="ShowTranslation">
+                <MudText Typo="Typo.h2" Class="mb-6" Style="font-weight: 600; color: #5E60CE;">
+                    @_currentWord.Spanish
+                </MudText>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                           OnClick="ShowTranslation" Class="px-8">
                     Show Translation
-                </button>
+                </MudButton>
             }
             else
             {
-                <h2 class="card-title display-4 mb-2">@_currentWord.Spanish</h2>
-                <h3 class="text-muted mb-3">@_currentWord.English</h3>
+                <MudText Typo="Typo.h2" Class="mb-2" Style="font-weight: 600; color: #5E60CE;">
+                    @_currentWord.Spanish
+                </MudText>
+
+                <MudText Typo="Typo.h5" Color="Color.Secondary" Class="mb-4">
+                    @_currentWord.English
+                </MudText>
 
                 @if (!string.IsNullOrEmpty(_currentWord.ExampleSentence))
                 {
-                    <div class="mt-3 p-3 bg-light rounded">
-                        <p class="mb-1"><em>@_currentWord.ExampleSentence</em></p>
-                        <p class="text-muted small mb-0">@_currentWord.ExampleTranslation</p>
-                    </div>
+                    <MudPaper Elevation="0" Class="pa-4 rounded-lg mb-4" Style="background: #F8FAFC; width: 100%;">
+                        <MudText Typo="Typo.body2" Style="font-style: italic;">
+                            "@_currentWord.ExampleSentence"
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @_currentWord.ExampleTranslation
+                        </MudText>
+                    </MudPaper>
                 }
 
-                <div class="mt-4">
-                    <p class="mb-2">Did you know this word?</p>
-                    <button class="btn btn-success me-2" @onclick="() => RecordAndNext(true)">
-                        Yes, I knew it
-                    </button>
-                    <button class="btn btn-danger" @onclick="() => RecordAndNext(false)">
-                        No, I didn't
-                    </button>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Did you know this word?
+                </MudText>
+
+                <div class="d-flex gap-3">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large"
+                               OnClick="@(() => RecordAndNext(true))" StartIcon="@Icons.Material.Rounded.Check">
+                        Yes
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large"
+                               OnClick="@(() => RecordAndNext(false))" StartIcon="@Icons.Material.Rounded.Close">
+                        No
+                    </MudButton>
                 </div>
             }
+        </MudPaper>
+
+        <div class="d-flex gap-2 mt-4">
+            <MudIconButton Icon="@Icons.Material.Rounded.ArrowBack" Variant="Variant.Outlined" Color="Color.Default"
+                           OnClick="PreviousWord" Disabled="@(_currentIndex == 0)" />
+            <MudIconButton Icon="@Icons.Material.Rounded.ArrowForward" Variant="Variant.Outlined" Color="Color.Default"
+                           OnClick="NextWord" Disabled="@(_currentIndex >= _words.Count - 1)" />
         </div>
-        <div class="card-footer">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar"
-                     style="width: @((_currentIndex + 1) * 100 / _words.Count)%">
+
+        <MudPaper Elevation="0" Class="pa-4 mt-6 rounded-lg" Style="border: 1px solid #E2E8F0;">
+            <div class="d-flex gap-6 justify-center">
+                <div class="text-center">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">@_sessionReviewed</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Reviewed</MudText>
+                </div>
+                <div class="text-center">
+                    <MudText Typo="Typo.h6" Color="Color.Success">@_sessionCorrect</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Knew</MudText>
+                </div>
+                <div class="text-center">
+                    <MudText Typo="Typo.h6" Color="Color.Info">@(_sessionAccuracy)%</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Accuracy</MudText>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="mt-3">
-        <button class="btn btn-outline-secondary me-2" @onclick="PreviousWord" disabled="@(_currentIndex == 0)">
-            Previous
-        </button>
-        <button class="btn btn-outline-secondary" @onclick="NextWord" disabled="@(_currentIndex >= _words.Count - 1)">
-            Skip
-        </button>
-    </div>
-
-    <div class="mt-4">
-        <h5>Session Stats</h5>
-        <p>Words reviewed: @_sessionReviewed | Correct: @_sessionCorrect |
-           Accuracy: @(_sessionReviewed > 0 ? (_sessionCorrect * 100 / _sessionReviewed) : 0)%</p>
+        </MudPaper>
     </div>
 }
 
@@ -84,6 +113,7 @@ else
     private bool _showTranslation;
     private int _sessionReviewed;
     private int _sessionCorrect;
+    private int _sessionAccuracy => _sessionReviewed > 0 ? _sessionCorrect * 100 / _sessionReviewed : 0;
 
     protected override void OnInitialized()
     {
