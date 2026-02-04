@@ -2,6 +2,8 @@
 
 A modern Blazor web application for learning the most common Spanish words through flashcards and quizzes. Built with MudBlazor for a clean, focused learning experience.
 
+![Quiz Demo](quiz_demo.png)
+
 ## Features
 
 ### Learn Mode
@@ -18,7 +20,9 @@ A modern Blazor web application for learning the most common Spanish words throu
   - Spanish to English
   - English to Spanish
   - Mixed (random direction)
-- Immediate feedback on answers
+- **Keyboard navigation**: Press 1-4 to select answers, Enter/Space to continue
+- Immediate feedback with full word definition shown after each answer
+- Smart word selection: prioritizes new words, reviews failed words, avoids already-learned words
 - Review all answers at the end of each quiz
 
 ### Statistics
@@ -42,7 +46,7 @@ Word data is sourced from the [doozan/spanish_data](https://github.com/doozan/sp
 - **Frequency data**: Most common Spanish lemmas from the [FrequencyWords](https://github.com/hermitdave/FrequencyWords) project (CC-BY-SA 3.0)
 - **Translations**: Spanish to English definitions from [Wiktionary](https://en.wiktionary.org) (CC-BY-SA)
 
-The app loads up to 1000 of the most frequent Spanish words with their translations.
+The app loads up to 10,000 of the most frequent Spanish words with their translations.
 
 If the data files are not present, the app falls back to an embedded list of 200 common words.
 
