@@ -7,6 +7,8 @@
 
 <PageTitle>Spanish Quiz</PageTitle>
 
+<div @ref="_quizContainer" tabindex="0" @onkeydown="HandleKeyDown" style="outline: none;">
+
 @if (!_quizStarted)
 {
     <div class="d-flex flex-column align-center">
@@ -120,8 +122,10 @@ else
             </MudText>
 
             <div class="d-flex flex-column gap-3">
-                @foreach (var option in _currentQuestion.Options)
+                @for (int i = 0; i < _currentQuestion.Options.Count; i++)
                 {
+                    var option = _currentQuestion.Options[i];
+                    var optionNumber = i + 1;
                     var optionText = _currentQuestion.IsSpanishToEnglish ? option.English : option.Spanish;
                     <MudButton Variant="@GetOptionVariant(option)"
                                Color="@GetOptionColor(option)"
@@ -130,7 +134,11 @@ else
                                OnClick="@(() => SelectAnswer(option))"
                                Disabled="@_answerSelected"
                                Class="justify-start text-left">
-                        @optionText
+                        <span class="d-flex align-center gap-3" style="width: 100%;">
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default"
+                                     Style="min-width: 28px;" Class="px-2">@optionNumber</MudChip>
+                            <span>@optionText</span>
+                        </span>
                     </MudButton>
                 }
             </div>
@@ -140,11 +148,27 @@ else
                 <MudAlert Severity="@(_lastAnswerCorrect ? Severity.Success : Severity.Error)" Class="mt-4" Dense="true">
                     @if (_lastAnswerCorrect)
                     {
-                        <span>Correct!</span>
+                        <div>
+                            <strong>Correct!</strong>
+                            <div class="mt-2">
+                                <span style="color: #4F46E5; font-weight: 600;">@_currentQuestion.Word.Spanish</span>
+                                <span> = </span>
+                                <span>@_currentQuestion.Word.English</span>
+                                <span class="ml-2" style="opacity: 0.7;">(@_currentQuestion.Word.PartOfSpeech)</span>
+                            </div>
+                        </div>
                     }
                     else
                     {
-                        <span>The correct answer is: <strong>@(_currentQuestion.IsSpanishToEnglish ? _currentQuestion.Word.English : _currentQuestion.Word.Spanish)</strong></span>
+                        <div>
+                            <strong>Incorrect</strong>
+                            <div class="mt-2">
+                                <span style="color: #4F46E5; font-weight: 600;">@_currentQuestion.Word.Spanish</span>
+                                <span> = </span>
+                                <span>@_currentQuestion.Word.English</span>
+                                <span class="ml-2" style="opacity: 0.7;">(@_currentQuestion.Word.PartOfSpeech)</span>
+                            </div>
+                        </div>
                     }
                 </MudAlert>
 
@@ -152,13 +176,20 @@ else
                            OnClick="NextQuestion"
                            EndIcon="@Icons.Material.Rounded.ArrowForward">
                     @(_currentQuestionIndex < _questions.Count - 1 ? "Next Question" : "See Results")
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Inherit" Class="ml-2">Enter</MudChip>
                 </MudButton>
             }
         </MudPaper>
+
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center" Class="mt-4">
+            Press <strong>1-4</strong> to select, <strong>Enter</strong> or <strong>Space</strong> to continue
+        </MudText>
     </div>
 }
+</div>
 
 @code {
+    private ElementReference _quizContainer;
     private bool _quizStarted;
     private bool _quizComplete;
     private int _questionCount = 10;
@@ -377,4 +408,41 @@ else
         >= 50 => "Keep practicing!",
         _ => "Don't give up!"
     };
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (!_quizStarted || _quizComplete || _currentQuestion == null)
+            return;
+
+        // Handle answer selection with number keys
+        if (!_answerSelected)
+        {
+            var optionIndex = e.Key switch
+            {
+                "1" => 0,
+                "2" => 1,
+                "3" => 2,
+                "4" => 3,
+                _ => -1
+            };
+
+            if (optionIndex >= 0 && optionIndex < _currentQuestion.Options.Count)
+            {
+                await SelectAnswer(_currentQuestion.Options[optionIndex]);
+            }
+        }
+        // Handle next question with Enter or Space
+        else if (e.Key == "Enter" || e.Key == " ")
+        {
+            await NextQuestion();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await _quizContainer.FocusAsync();
+        }
+    }
 }
