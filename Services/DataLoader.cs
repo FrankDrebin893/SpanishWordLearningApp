@@ -20,6 +20,8 @@ public class DataLoader
             return translations;
 
         var content = File.ReadAllText(path);
+        // Normalize line endings to \n for consistent parsing
+        content = content.Replace("\r\n", "\n").Replace("\r", "\n");
         var entries = content.Split("_____", StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var entry in entries)
