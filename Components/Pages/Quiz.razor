@@ -3,11 +3,13 @@
 @using SpanishWordLearner.Services
 @inject WordService WordService
 @inject ProgressService ProgressService
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 @rendermode InteractiveServer
 
 <PageTitle>Spanish Quiz</PageTitle>
 
-<div @ref="_quizContainer" tabindex="0" @onkeydown="HandleKeyDown" style="outline: none;">
+<div>
 
 @if (!_quizStarted)
 {
@@ -189,7 +191,7 @@ else
 </div>
 
 @code {
-    private ElementReference _quizContainer;
+    private DotNetObjectReference<Quiz>? _dotNetRef;
     private bool _quizStarted;
     private bool _quizComplete;
     private int _questionCount = 10;
@@ -409,7 +411,8 @@ else
         _ => "Don't give up!"
     };
 
-    private async Task HandleKeyDown(KeyboardEventArgs e)
+    [JSInvokable]
+    public async Task HandleKeyDown(string key)
     {
         if (!_quizStarted || _quizComplete || _currentQuestion == null)
             return;
@@ -417,7 +420,7 @@ else
         // Handle answer selection with number keys
         if (!_answerSelected)
         {
-            var optionIndex = e.Key switch
+            var optionIndex = key switch
             {
                 "1" => 0,
                 "2" => 1,
@@ -429,12 +432,14 @@ else
             if (optionIndex >= 0 && optionIndex < _currentQuestion.Options.Count)
             {
                 await SelectAnswer(_currentQuestion.Options[optionIndex]);
+                StateHasChanged();
             }
         }
         // Handle next question with Enter or Space
-        else if (e.Key == "Enter" || e.Key == " ")
+        else if (key == "Enter" || key == " ")
         {
             await NextQuestion();
+            StateHasChanged();
         }
     }
 
@@ -442,7 +447,17 @@ else
     {
         if (firstRender)
         {
-            await _quizContainer.FocusAsync();
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("quizKeyboardHandler.init", _dotNetRef);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dotNetRef != null)
+        {
+            await JS.InvokeVoidAsync("quizKeyboardHandler.dispose");
+            _dotNetRef.Dispose();
         }
     }
 }

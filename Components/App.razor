@@ -18,6 +18,33 @@
     <Routes />
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        window.quizKeyboardHandler = {
+            dotNetRef: null,
+            handler: null,
+            init: function(dotNetRef) {
+                this.dotNetRef = dotNetRef;
+                this.handler = (e) => {
+                    if (['1', '2', '3', '4', 'Enter', ' '].includes(e.key)) {
+                        // Don't capture if user is in an input field
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                            return;
+                        }
+                        e.preventDefault();
+                        this.dotNetRef.invokeMethodAsync('HandleKeyDown', e.key);
+                    }
+                };
+                document.addEventListener('keydown', this.handler);
+            },
+            dispose: function() {
+                if (this.handler) {
+                    document.removeEventListener('keydown', this.handler);
+                    this.handler = null;
+                }
+                this.dotNetRef = null;
+            }
+        };
+    </script>
 </body>
 
 </html>
