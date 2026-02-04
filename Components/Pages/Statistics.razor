@@ -113,7 +113,7 @@ else
     <MudPaper Elevation="0" Class="pa-4 rounded-lg mb-6" Style="border: 1px solid #E2E8F0;">
         <div class="d-flex justify-space-between align-center mb-4">
             <MudText Typo="Typo.h6" Style="font-weight: 500;">Word Performance</MudText>
-            <MudToggleGroup T="string" @bind-Value="_showFilter" Color="Color.Primary" Size="Size.Small">
+            <MudToggleGroup T="string" Value="_showFilter" ValueChanged="OnFilterChanged" Color="Color.Primary" Size="Size.Small">
                 <MudToggleItem Value="@("all")">All</MudToggleItem>
                 <MudToggleItem Value="@("learned")">Learned</MudToggleItem>
                 <MudToggleItem Value="@("struggling")">Struggling</MudToggleItem>
@@ -208,7 +208,7 @@ else
         }
     }
 
-    private void SetFilter(string filter)
+    private void OnFilterChanged(string filter)
     {
         _showFilter = filter;
         UpdateFilteredWords();
