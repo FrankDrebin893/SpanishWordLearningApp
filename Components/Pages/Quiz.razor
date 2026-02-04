@@ -111,11 +111,11 @@ else
             <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-6">
                 @if (_currentQuestion!.IsSpanishToEnglish)
                 {
-                    <span>What does "<strong style="color: #5E60CE;">@_currentQuestion.Word.Spanish</strong>" mean?</span>
+                    <span>What does "<strong style="color: #4F46E5;">@_currentQuestion.Word.Spanish</strong>" mean?</span>
                 }
                 else
                 {
-                    <span>How do you say "<strong style="color: #5E60CE;">@_currentQuestion.Word.English</strong>" in Spanish?</span>
+                    <span>How do you say "<strong style="color: #4F46E5;">@_currentQuestion.Word.English</strong>" in Spanish?</span>
                 }
             </MudText>
 
@@ -189,7 +189,7 @@ else
         public bool IsCorrect { get; set; }
     }
 
-    private void StartQuiz()
+    private async Task StartQuiz()
     {
         _quizStarted = true;
         _quizComplete = false;
@@ -199,7 +199,60 @@ else
         _answerSelected = false;
 
         var allWords = WordService.GetAllWords();
-        var selectedWords = allWords.OrderBy(_ => Random.Shared.Next()).Take(_questionCount).ToList();
+        var progress = await ProgressService.GetProgressAsync();
+
+        // Categorize words based on progress
+        var newWords = new List<SpanishWord>();
+        var failedWords = new List<SpanishWord>();
+        var learnedWords = new List<SpanishWord>();
+
+        foreach (var word in allWords)
+        {
+            if (!progress.WordStats.TryGetValue(word.Id, out var wordProgress))
+            {
+                // Never seen - highest priority
+                newWords.Add(word);
+            }
+            else if (!wordProgress.IsLearned)
+            {
+                // Seen but not learned (failed or still learning) - can be repeated
+                failedWords.Add(word);
+            }
+            else
+            {
+                // Learned - lowest priority, avoid unless necessary
+                learnedWords.Add(word);
+            }
+        }
+
+        // Select words prioritizing: new words first, then failed words, then learned words only if needed
+        var selectedWords = new List<SpanishWord>();
+
+        // Shuffle each category
+        newWords = newWords.OrderBy(_ => Random.Shared.Next()).ToList();
+        failedWords = failedWords.OrderBy(_ => Random.Shared.Next()).ToList();
+        learnedWords = learnedWords.OrderBy(_ => Random.Shared.Next()).ToList();
+
+        // Take from new words first
+        var needed = _questionCount;
+        selectedWords.AddRange(newWords.Take(needed));
+        needed -= selectedWords.Count;
+
+        // Then from failed words
+        if (needed > 0)
+        {
+            selectedWords.AddRange(failedWords.Take(needed));
+            needed -= failedWords.Count;
+        }
+
+        // Only use learned words if we still need more
+        if (needed > 0)
+        {
+            selectedWords.AddRange(learnedWords.Take(needed));
+        }
+
+        // Shuffle the final selection so it's not predictable
+        selectedWords = selectedWords.OrderBy(_ => Random.Shared.Next()).ToList();
 
         _questions = selectedWords.Select(word =>
         {
